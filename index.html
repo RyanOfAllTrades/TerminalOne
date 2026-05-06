@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Ledger — Portfolio & Research</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg: #0a0b0d;
+  --bg-elev: #111316;
+  --bg-card: #14171b;
+  --border: #20242a;
+  --border-bright: #2a2f37;
+  --text: #e8eaed;
+  --text-dim: #8b929c;
+  --text-faint: #5a6068;
+  --accent: #d4ff3f;
+  --accent-dim: #9bbf2e;
+  --green: #4ade80;
+  --green-bg: rgba(74, 222, 128, 0.08);
+  --red: #f87171;
+  --red-bg: rgba(248, 113, 113, 0.08);
+  --amber: #fbbf24;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Inter', -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.5;
+  font-feature-settings: 'tnum' 1, 'cv11' 1;
+  overflow-x: hidden;
+}
+
+.mono { font-family: 'JetBrains Mono', monospace; font-feature-settings: 'tnum' 1; }
+.serif { font-family: 'Fraunces', serif; font-optical-sizing: auto; }
+
+/* Layout */
+.app { display: grid; grid-template-columns: 220px 1fr; min-height: 100vh; }
+
+/* Sidebar */
+.sidebar {
+  background: var(--bg-elev);
+  border-right: 1px solid var(--border);
+  padding: 20px 16px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 8px 24px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 16px;
+}
+
+.logo-mark {
+  width: 28px;
+  height: 28px;
+  background: var(--accent);
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+  font-family: 'Fraunces', serif;
+  font-weight: 700;
+  color: #0a0b0d;
+  font-size: 16px;
+}
+
+.logo-text {
+  font-family: 'Fraunces', serif;
+  font-weight: 600;
+  font-size: 18px;
+  letter-spacing: -0.02em;
+}
+
+.nav-section { margin-bottom: 24px; }
+.nav-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-faint);
+  padding: 0 8px 8px;
+  font-weight: 600;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 13px;
+  transition: all 0.12s;
+  border: none;
+  background: transparent;
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
+}
+.nav-item:hover { background: var(--bg-card); color: var(--text); }
+.nav-item.active { background: var(--bg-card); color: var(--text); }
+.nav-item.active .nav-icon { color: var(--accent); }
+.nav-icon { width: 16px; height: 16px; flex-shrink: 0; }
+
+.sidebar-footer {
+  margin-top: auto;
+  padding: 12px;
+  background: var(--bg-card);
+  border-radius: 8px;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+.sidebar-footer .label { color: var(--text-faint); font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px; }
+
+/* Main content */
+.main { padding: 28px 36px; max-width: 1400px; }
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28px;
+  gap: 16px;
+}
+
+.search {
+  flex: 1;
+  max-width: 480px;
+  position: relative;
+}
+.search input {
+  width: 100%;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px 10px 38px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.12s;
+}
+.search input:focus { border-color: var(--accent); }
+.search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-faint);
+  width: 16px; height: 16px;
+}
+.search-shortcut {
+  position: absolute;
+  right: 10px; top: 50%; transform: translateY(-50%);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--text-faint);
+  background: var(--bg-elev);
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+}
+
+.market-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+.pulse {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 0 0 var(--green);
+  animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.6); }
+  70% { box-shadow: 0 0 0 8px rgba(74, 222, 128, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0); }
+}
+
+/* Page header */
+.page-header { margin-bottom: 24px; }
+.page-title {
+  font-family: 'Fraunces', serif;
+  font-size: 36px;
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  margin-bottom: 6px;
+}
+.page-subtitle { color: var(--text-dim); font-size: 13px; }
+
+/* Hero stats */
+.hero-stats {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr 1fr;
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 28px;
+}
+
+.stat {
+  background: var(--bg-card);
+  padding: 22px 24px;
+}
+.stat-label {
+  font-size: 11px;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+.stat-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 28px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  margin-bottom: 6px;
+}
+.stat-meta {
+  font-size: 12px;
+  color: var(--text-dim);
+  font-family: 'JetBrains Mono', monospace;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.stat-meta.up { color: var(--green); }
+.stat-meta.down { color: var(--red); }
+
+/* Grid */
+.grid-main {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.grid-secondary {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+/* Card */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.card-title {
+  font-family: 'Fraunces', serif;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.card-actions { display: flex; gap: 4px; }
+.tab-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.tab-btn:hover { color: var(--text); }
+.tab-btn.active { background: var(--bg-elev); color: var(--accent); }
+
+/* Chart */
+.chart-wrapper {
+  padding: 20px;
+  height: 320px;
+  position: relative;
+}
+
+/* Position table */
+.table { width: 100%; border-collapse: collapse; }
+.table th {
+  text-align: left;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-faint);
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-elev);
+}
+.table th.right, .table td.right { text-align: right; }
+.table td {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+  vertical-align: middle;
+}
+.table tr:last-child td { border-bottom: none; }
+.table tr { transition: background 0.1s; cursor: pointer; }
+.table tr:hover { background: var(--bg-elev); }
+
+.ticker-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.ticker-badge {
+  width: 32px; height: 32px;
+  border-radius: 6px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  display: grid;
+  place-items: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 600;
+  font-size: 11px;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+.ticker-symbol { font-family: 'JetBrains Mono', monospace; font-weight: 600; font-size: 13px; }
+.ticker-name { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+
+.value-up { color: var(--green); }
+.value-down { color: var(--red); }
+
+.bar-bg {
+  width: 60px;
+  height: 4px;
+  background: var(--bg-elev);
+  border-radius: 2px;
+  overflow: hidden;
+  display: inline-block;
+  vertical-align: middle;
+}
+.bar-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+}
+
+/* News */
+.news-list { padding: 8px 0; }
+.news-item {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.news-item:last-child { border-bottom: none; }
+.news-item:hover { background: var(--bg-elev); }
+
+.news-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--text-faint);
+  margin-bottom: 6px;
+}
+.news-source { color: var(--accent-dim); font-weight: 500; }
+.news-tickers { display: flex; gap: 4px; margin-left: auto; }
+.news-ticker {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: var(--bg-elev);
+  color: var(--text);
+}
+
+.news-headline {
+  font-size: 13px;
+  line-height: 1.45;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.sentiment-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.sentiment-bullish { background: var(--green); }
+.sentiment-bearish { background: var(--red); }
+.sentiment-neutral { background: var(--text-faint); }
+
+/* Catalyst calendar */
+.catalyst-list { padding: 8px 0; }
+.catalyst-item {
+  display: grid;
+  grid-template-columns: 56px 1fr auto;
+  gap: 14px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  align-items: center;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.catalyst-item:last-child { border-bottom: none; }
+.catalyst-item:hover { background: var(--bg-elev); }
+
+.catalyst-date {
+  text-align: center;
+  border-radius: 6px;
+  padding: 6px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+}
+.catalyst-month {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-faint);
+  font-weight: 600;
+}
+.catalyst-day {
+  font-family: 'Fraunces', serif;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1;
+  margin-top: 2px;
+}
+.catalyst-date.urgent { border-color: var(--amber); }
+.catalyst-date.urgent .catalyst-day { color: var(--amber); }
+
+.catalyst-title { font-size: 13px; font-weight: 500; }
+.catalyst-meta { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+
+.catalyst-tag {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 3px 7px;
+  border-radius: 4px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+}
+.catalyst-tag.earnings { color: var(--accent); border-color: var(--accent-dim); }
+.catalyst-tag.fda { color: var(--amber); border-color: rgba(251, 191, 36, 0.3); }
+.catalyst-tag.fed { color: #60a5fa; border-color: rgba(96, 165, 250, 0.3); }
+
+/* Insider */
+.insider-list { padding: 0; }
+.insider-item {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 12px;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border);
+  align-items: center;
+}
+.insider-item:last-child { border-bottom: none; }
+.insider-action {
+  width: 30px; height: 30px;
+  border-radius: 6px;
+  display: grid; place-items: center;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: 'JetBrains Mono', monospace;
+}
+.insider-action.buy { background: var(--green-bg); color: var(--green); }
+.insider-action.sell { background: var(--red-bg); color: var(--red); }
+.insider-name { font-size: 12px; font-weight: 500; }
+.insider-detail { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+.insider-amount { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 500; text-align: right; }
+.insider-shares { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+
+/* Allocation chart */
+.allocation-wrapper {
+  padding: 20px;
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  gap: 24px;
+  align-items: center;
+}
+.allocation-chart { height: 160px; position: relative; }
+.allocation-center {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+.allocation-center-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-faint);
+  font-weight: 600;
+}
+.allocation-center-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 18px;
+  font-weight: 500;
+  margin-top: 4px;
+}
+
+.allocation-legend { display: flex; flex-direction: column; gap: 10px; }
+.legend-item {
+  display: grid;
+  grid-template-columns: 12px 1fr auto;
+  gap: 10px;
+  align-items: center;
+  font-size: 12px;
+}
+.legend-dot { width: 10px; height: 10px; border-radius: 2px; }
+.legend-name { color: var(--text-dim); }
+.legend-value { font-family: 'JetBrains Mono', monospace; font-weight: 500; }
+
+/* Watchlist mini */
+.watchlist-mini { padding: 0; }
+.watch-item {
+  display: grid;
+  grid-template-columns: 60px 80px 1fr auto;
+  gap: 12px;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border);
+  align-items: center;
+  cursor: pointer;
+}
+.watch-item:last-child { border-bottom: none; }
+.watch-item:hover { background: var(--bg-elev); }
+.watch-symbol { font-family: 'JetBrains Mono', monospace; font-weight: 600; font-size: 13px; }
+.watch-spark { height: 30px; }
+.watch-price { font-family: 'JetBrains Mono', monospace; font-size: 12px; text-align: right; }
+.watch-change { font-family: 'JetBrains Mono', monospace; font-size: 11px; text-align: right; margin-top: 2px; }
+
+/* Responsive */
+@media (max-width: 1100px) {
+  .grid-main { grid-template-columns: 1fr; }
+  .grid-secondary { grid-template-columns: 1fr; }
+  .hero-stats { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 720px) {
+  .app { grid-template-columns: 1fr; }
+  .sidebar { display: none; }
+  .main { padding: 20px; }
+  .hero-stats { grid-template-columns: 1fr; }
+  .page-title { font-size: 28px; }
+}
+
+/* Subtle entrance */
+.fade-in { animation: fadeIn 0.5s ease forwards; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.delay-1 { animation-delay: 0.05s; opacity: 0; }
+.delay-2 { animation-delay: 0.1s; opacity: 0; }
+.delay-3 { animation-delay: 0.15s; opacity: 0; }
+.delay-4 { animation-delay: 0.2s; opacity: 0; }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-mark">L</div>
+      <div class="logo-text">Ledger</div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">Workspace</div>
+      <button class="nav-item active">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Dashboard
+      </button>
+      <button class="nav-item">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 5-5"/></svg>
+        Portfolio
+      </button>
+      <button class="nav-item">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6l3 3h11v13H2z"/><circle cx="12" cy="13" r="3"/></svg>
+        Watchlist
+      </button>
+      <button class="nav-item">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+        Calendar
+      </button>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">Research</div>
+      <button class="nav-item">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        News Feed
+      </button>
+      <button class="nav-item">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
+        SEC Filings
+      </button>
+      <button class="nav-item">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+        Insider Flow
+      </button>
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="label">Demo Account</div>
+      <div>Ryan • $84,392</div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div class="search">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" placeholder="Search ticker, news, filings..." />
+        <span class="search-shortcut">⌘K</span>
+      </div>
+      <div class="market-status">
+        <span class="pulse"></span>
+        <span>Market Open · Closes in 2h 14m</span>
+      </div>
+    </div>
+
+    <!-- PAGE HEADER -->
+    <div class="page-header fade-in">
+      <h1 class="page-title">Good afternoon, <span class="serif" style="font-style: italic; color: var(--accent-dim);">Ryan</span></h1>
+      <p class="page-subtitle">Your portfolio is up <span class="value-up mono">+$1,247.32</span> today across 4 holdings.</p>
+    </div>
+
+    <!-- HERO STATS -->
+    <div class="hero-stats fade-in delay-1">
+      <div class="stat">
+        <div class="stat-label">Total Value</div>
+        <div class="stat-value">$84,392.18</div>
+        <div class="stat-meta up">↑ $1,247.32 (+1.50%) today</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Day P/L</div>
+        <div class="stat-value value-up">+$1,247.32</div>
+        <div class="stat-meta">vs S&P 500 +0.42%</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Total P/L</div>
+        <div class="stat-value value-up">+$12,847.91</div>
+        <div class="stat-meta up">+17.96% all-time</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Buying Power</div>
+        <div class="stat-value">$3,210.00</div>
+        <div class="stat-meta">Cash available</div>
+      </div>
+    </div>
+
+    <!-- MAIN GRID: chart + news -->
+    <div class="grid-main">
+      <!-- Performance chart -->
+      <div class="card fade-in delay-2">
+        <div class="card-header">
+          <div class="card-title">Portfolio Performance</div>
+          <div class="card-actions">
+            <button class="tab-btn">1D</button>
+            <button class="tab-btn">1W</button>
+            <button class="tab-btn active">1M</button>
+            <button class="tab-btn">3M</button>
+            <button class="tab-btn">1Y</button>
+            <button class="tab-btn">ALL</button>
+          </div>
+        </div>
+        <div class="chart-wrapper">
+          <canvas id="portfolioChart"></canvas>
+        </div>
+      </div>
+
+      <!-- News -->
+      <div class="card fade-in delay-2">
+        <div class="card-header">
+          <div class="card-title">Filtered News</div>
+          <div class="card-actions">
+            <button class="tab-btn active">My Stocks</button>
+            <button class="tab-btn">Market</button>
+          </div>
+        </div>
+        <div class="news-list">
+          <div class="news-item">
+            <div class="news-meta">
+              <span class="sentiment-dot sentiment-bullish"></span>
+              <span class="news-source">Bloomberg</span>
+              <span>· 14 min ago</span>
+              <div class="news-tickers"><span class="news-ticker">HIMS</span></div>
+            </div>
+            <div class="news-headline">Hims &amp; Hers shares climb on positive analyst note ahead of Q1 earnings; price target raised to $42</div>
+          </div>
+          <div class="news-item">
+            <div class="news-meta">
+              <span class="sentiment-dot sentiment-neutral"></span>
+              <span class="news-source">Reuters</span>
+              <span>· 47 min ago</span>
+              <div class="news-tickers"><span class="news-ticker">HOOD</span></div>
+            </div>
+            <div class="news-headline">Robinhood reports record options volume in April; expands prediction market offerings</div>
+          </div>
+          <div class="news-item">
+            <div class="news-meta">
+              <span class="sentiment-dot sentiment-bullish"></span>
+              <span class="news-source">CNBC</span>
+              <span>· 2 hr ago</span>
+              <div class="news-tickers"><span class="news-ticker">VOO</span></div>
+            </div>
+            <div class="news-headline">S&amp;P 500 ETF inflows surge as retail investors return to broad market exposure</div>
+          </div>
+          <div class="news-item">
+            <div class="news-meta">
+              <span class="sentiment-dot sentiment-bearish"></span>
+              <span class="news-source">WSJ</span>
+              <span>· 3 hr ago</span>
+              <div class="news-tickers"><span class="news-ticker">IBRX</span></div>
+            </div>
+            <div class="news-headline">ImmunityBio faces dilution concerns after announcing $75M secondary offering</div>
+          </div>
+          <div class="news-item">
+            <div class="news-meta">
+              <span class="sentiment-dot sentiment-neutral"></span>
+              <span class="news-source">Barron's</span>
+              <span>· 5 hr ago</span>
+              <div class="news-tickers"><span class="news-ticker">HIMS</span></div>
+            </div>
+            <div class="news-headline">FDA peptide advisory committee schedule confirmed for July; Hims compounded GLP-1 in focus</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- POSITIONS TABLE (full width) -->
+    <div class="card fade-in delay-3" style="margin-bottom: 20px;">
+      <div class="card-header">
+        <div class="card-title">Holdings</div>
+        <div class="card-actions">
+          <button class="tab-btn active">All</button>
+          <button class="tab-btn">Stocks</button>
+          <button class="tab-btn">ETFs</button>
+        </div>
+      </div>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Position</th>
+            <th class="right">Shares</th>
+            <th class="right">Avg Cost</th>
+            <th class="right">Price</th>
+            <th class="right">Market Value</th>
+            <th class="right">Day Change</th>
+            <th class="right">Total P/L</th>
+            <th class="right">% Portfolio</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <div class="ticker-cell">
+                <div class="ticker-badge">H</div>
+                <div>
+                  <div class="ticker-symbol">HIMS</div>
+                  <div class="ticker-name">Hims &amp; Hers Health</div>
+                </div>
+              </div>
+            </td>
+            <td class="right mono">420</td>
+            <td class="right mono">$24.27</td>
+            <td class="right mono">$38.94</td>
+            <td class="right mono">$16,354.80</td>
+            <td class="right mono value-up">+2.84%</td>
+            <td class="right mono value-up">+$6,161.40</td>
+            <td class="right">
+              <div class="ticker-cell" style="justify-content: flex-end;">
+                <span class="mono">19.4%</span>
+                <div class="bar-bg"><div class="bar-fill" style="width: 19.4%; background: #d4ff3f;"></div></div>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <div class="ticker-cell">
+                <div class="ticker-badge">V</div>
+                <div>
+                  <div class="ticker-symbol">VOO</div>
+                  <div class="ticker-name">Vanguard S&amp;P 500 ETF</div>
+                </div>
+              </div>
+            </td>
+            <td class="right mono">95</td>
+            <td class="right mono">$472.30</td>
+            <td class="right mono">$508.12</td>
+            <td class="right mono">$48,271.40</td>
+            <td class="right mono value-up">+0.48%</td>
+            <td class="right mono value-up">+$3,402.90</td>
+            <td class="right">
+              <div class="ticker-cell" style="justify-content: flex-end;">
+                <span class="mono">57.2%</span>
+                <div class="bar-bg"><div class="bar-fill" style="width: 57.2%; background: #60a5fa;"></div></div>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <div class="ticker-cell">
+                <div class="ticker-badge">R</div>
+                <div>
+                  <div class="ticker-symbol">HOOD</div>
+                  <div class="ticker-name">Robinhood Markets</div>
+                </div>
+              </div>
+            </td>
+            <td class="right mono">180</td>
+            <td class="right mono">$28.40</td>
+            <td class="right mono">$71.85</td>
+            <td class="right mono">$12,933.00</td>
+            <td class="right mono value-up">+3.21%</td>
+            <td class="right mono value-up">+$7,821.00</td>
+            <td class="right">
+              <div class="ticker-cell" style="justify-content: flex-end;">
+                <span class="mono">15.3%</span>
+                <div class="bar-bg"><div class="bar-fill" style="width: 15.3%; background: #fbbf24;"></div></div>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <div class="ticker-cell">
+                <div class="ticker-badge">I</div>
+                <div>
+                  <div class="ticker-symbol">IBRX</div>
+                  <div class="ticker-name">ImmunityBio</div>
+                </div>
+              </div>
+            </td>
+            <td class="right mono">1,400</td>
+            <td class="right mono">$4.82</td>
+            <td class="right mono">$3.74</td>
+            <td class="right mono">$5,236.00</td>
+            <td class="right mono value-down">−4.12%</td>
+            <td class="right mono value-down">−$1,512.00</td>
+            <td class="right">
+              <div class="ticker-cell" style="justify-content: flex-end;">
+                <span class="mono">6.2%</span>
+                <div class="bar-bg"><div class="bar-fill" style="width: 6.2%; background: #f87171;"></div></div>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <div class="ticker-cell">
+                <div class="ticker-badge" style="color: var(--text-faint);">$</div>
+                <div>
+                  <div class="ticker-symbol">CASH</div>
+                  <div class="ticker-name">USD</div>
+                </div>
+              </div>
+            </td>
+            <td class="right mono">—</td>
+            <td class="right mono">—</td>
+            <td class="right mono">$1.00</td>
+            <td class="right mono">$1,596.98</td>
+            <td class="right mono" style="color: var(--text-dim);">—</td>
+            <td class="right mono" style="color: var(--text-dim);">—</td>
+            <td class="right">
+              <div class="ticker-cell" style="justify-content: flex-end;">
+                <span class="mono">1.9%</span>
+                <div class="bar-bg"><div class="bar-fill" style="width: 1.9%; background: var(--text-faint);"></div></div>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- SECONDARY GRID: catalyst + watchlist -->
+    <div class="grid-secondary">
+      <!-- Catalyst Calendar -->
+      <div class="card fade-in delay-3">
+        <div class="card-header">
+          <div class="card-title">Upcoming Catalysts</div>
+          <button class="tab-btn">View all →</button>
+        </div>
+        <div class="catalyst-list">
+          <div class="catalyst-item">
+            <div class="catalyst-date urgent">
+              <div class="catalyst-month">May</div>
+              <div class="catalyst-day">11</div>
+            </div>
+            <div>
+              <div class="catalyst-title">HIMS Q1 2026 Earnings</div>
+              <div class="catalyst-meta">After market close · EPS est. $0.18</div>
+            </div>
+            <span class="catalyst-tag earnings">Earnings</span>
+          </div>
+          <div class="catalyst-item">
+            <div class="catalyst-date">
+              <div class="catalyst-month">May</div>
+              <div class="catalyst-day">14</div>
+            </div>
+            <div>
+              <div class="catalyst-title">CPI Report — April</div>
+              <div class="catalyst-meta">8:30 AM ET · Forecast 3.1% YoY</div>
+            </div>
+            <span class="catalyst-tag fed">Macro</span>
+          </div>
+          <div class="catalyst-item">
+            <div class="catalyst-date">
+              <div class="catalyst-month">May</div>
+              <div class="catalyst-day">28</div>
+            </div>
+            <div>
+              <div class="catalyst-title">HOOD Annual Shareholder Meeting</div>
+              <div class="catalyst-meta">Live webcast · 10:00 AM ET</div>
+            </div>
+            <span class="catalyst-tag">Event</span>
+          </div>
+          <div class="catalyst-item">
+            <div class="catalyst-date">
+              <div class="catalyst-month">Jul</div>
+              <div class="catalyst-day">23</div>
+            </div>
+            <div>
+              <div class="catalyst-title">FDA Peptide AdCom — HIMS</div>
+              <div class="catalyst-meta">Compounded GLP-1 review · 2-day session</div>
+            </div>
+            <span class="catalyst-tag fda">FDA</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Allocation -->
+      <div class="card fade-in delay-3">
+        <div class="card-header">
+          <div class="card-title">Sector Allocation</div>
+          <button class="tab-btn">By sector</button>
+        </div>
+        <div class="allocation-wrapper">
+          <div class="allocation-chart">
+            <canvas id="allocationChart"></canvas>
+            <div class="allocation-center">
+              <div class="allocation-center-label">Holdings</div>
+              <div class="allocation-center-value">5</div>
+            </div>
+          </div>
+          <div class="allocation-legend">
+            <div class="legend-item">
+              <span class="legend-dot" style="background: #60a5fa;"></span>
+              <span class="legend-name">Broad Market ETF</span>
+              <span class="legend-value">57.2%</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-dot" style="background: #d4ff3f;"></span>
+              <span class="legend-name">Healthcare</span>
+              <span class="legend-value">25.6%</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-dot" style="background: #fbbf24;"></span>
+              <span class="legend-name">Financials</span>
+              <span class="legend-value">15.3%</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-dot" style="background: var(--text-faint);"></span>
+              <span class="legend-name">Cash</span>
+              <span class="legend-value">1.9%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Insider activity + Watchlist -->
+    <div class="grid-secondary" style="margin-top: 20px;">
+      <div class="card fade-in delay-4">
+        <div class="card-header">
+          <div class="card-title">Insider Activity (Form 4)</div>
+          <button class="tab-btn">My stocks</button>
+        </div>
+        <div class="insider-list">
+          <div class="insider-item">
+            <div class="insider-action buy">B</div>
+            <div>
+              <div class="insider-name">Andrew Dudum · CEO</div>
+              <div class="insider-detail">HIMS · Open market purchase · Apr 28</div>
+            </div>
+            <div>
+              <div class="insider-amount value-up">+$2.4M</div>
+              <div class="insider-shares">62,500 sh</div>
+            </div>
+          </div>
+          <div class="insider-item">
+            <div class="insider-action sell">S</div>
+            <div>
+              <div class="insider-name">Vlad Tenev · CEO</div>
+              <div class="insider-detail">HOOD · Rule 10b5-1 plan · Apr 25</div>
+            </div>
+            <div>
+              <div class="insider-amount value-down">−$8.1M</div>
+              <div class="insider-shares">120,000 sh</div>
+            </div>
+          </div>
+          <div class="insider-item">
+            <div class="insider-action sell">S</div>
+            <div>
+              <div class="insider-name">Patrick Soon-Shiong · Director</div>
+              <div class="insider-detail">IBRX · Form 4 disposal · Apr 22</div>
+            </div>
+            <div>
+              <div class="insider-amount value-down">−$1.2M</div>
+              <div class="insider-shares">320,000 sh</div>
+            </div>
+          </div>
+          <div class="insider-item">
+            <div class="insider-action buy">B</div>
+            <div>
+              <div class="insider-name">Spencer Lee · CFO</div>
+              <div class="insider-detail">HIMS · Stock award vesting · Apr 19</div>
+            </div>
+            <div>
+              <div class="insider-amount value-up">+$842K</div>
+              <div class="insider-shares">22,000 sh</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card fade-in delay-4">
+        <div class="card-header">
+          <div class="card-title">Watchlist</div>
+          <button class="tab-btn">+ Add ticker</button>
+        </div>
+        <div class="watchlist-mini">
+          <div class="watch-item">
+            <div class="watch-symbol">NVDA</div>
+            <div class="watch-spark"><canvas data-spark="up"></canvas></div>
+            <div></div>
+            <div>
+              <div class="watch-price">$924.18</div>
+              <div class="watch-change value-up">+1.84%</div>
+            </div>
+          </div>
+          <div class="watch-item">
+            <div class="watch-symbol">PLTR</div>
+            <div class="watch-spark"><canvas data-spark="up"></canvas></div>
+            <div></div>
+            <div>
+              <div class="watch-price">$24.67</div>
+              <div class="watch-change value-up">+3.12%</div>
+            </div>
+          </div>
+          <div class="watch-item">
+            <div class="watch-symbol">TSLA</div>
+            <div class="watch-spark"><canvas data-spark="down"></canvas></div>
+            <div></div>
+            <div>
+              <div class="watch-price">$184.30</div>
+              <div class="watch-change value-down">−0.94%</div>
+            </div>
+          </div>
+          <div class="watch-item">
+            <div class="watch-symbol">AVAV</div>
+            <div class="watch-spark"><canvas data-spark="up"></canvas></div>
+            <div></div>
+            <div>
+              <div class="watch-price">$182.45</div>
+              <div class="watch-change value-up">+0.56%</div>
+            </div>
+          </div>
+          <div class="watch-item">
+            <div class="watch-symbol">RKLB</div>
+            <div class="watch-spark"><canvas data-spark="down"></canvas></div>
+            <div></div>
+            <div>
+              <div class="watch-price">$5.92</div>
+              <div class="watch-change value-down">−1.21%</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+// ─── Portfolio performance chart ──────────────────────────────
+const ctx = document.getElementById('portfolioChart').getContext('2d');
+const grad = ctx.createLinearGradient(0, 0, 0, 320);
+grad.addColorStop(0, 'rgba(212, 255, 63, 0.25)');
+grad.addColorStop(1, 'rgba(212, 255, 63, 0)');
+
+// Realistic-looking 30-day data, slight upward bias with vol
+const data = [];
+let v = 71500;
+for (let i = 0; i < 30; i++) {
+  v += (Math.random() - 0.42) * 950;
+  data.push(Math.round(v));
+}
+data[29] = 84392;
+const labels = Array.from({length: 30}, (_, i) => {
+  const d = new Date();
+  d.setDate(d.getDate() - (29 - i));
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+});
+
+new Chart(ctx, {
+  type: 'line',
+  data: {
+    labels,
+    datasets: [{
+      data,
+      borderColor: '#d4ff3f',
+      backgroundColor: grad,
+      borderWidth: 2,
+      fill: true,
+      tension: 0.35,
+      pointRadius: 0,
+      pointHoverRadius: 5,
+      pointHoverBackgroundColor: '#d4ff3f',
+      pointHoverBorderColor: '#0a0b0d',
+      pointHoverBorderWidth: 2,
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: { mode: 'index', intersect: false },
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: '#14171b',
+        borderColor: '#2a2f37',
+        borderWidth: 1,
+        padding: 10,
+        titleColor: '#8b929c',
+        titleFont: { family: 'Inter', size: 11, weight: '600' },
+        bodyColor: '#e8eaed',
+        bodyFont: { family: 'JetBrains Mono', size: 13, weight: '500' },
+        displayColors: false,
+        callbacks: {
+          label: (ctx) => '$' + ctx.parsed.y.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+        }
+      }
+    },
+    scales: {
+      x: {
+        grid: { display: false },
+        ticks: { color: '#5a6068', font: { family: 'JetBrains Mono', size: 10 }, maxTicksLimit: 6, autoSkip: true }
+      },
+      y: {
+        grid: { color: '#20242a', drawBorder: false },
+        border: { display: false },
+        ticks: {
+          color: '#5a6068',
+          font: { family: 'JetBrains Mono', size: 10 },
+          callback: (val) => '$' + (val/1000).toFixed(0) + 'k'
+        }
+      }
+    }
+  }
+});
+
+// ─── Allocation donut ─────────────────────────────────────────
+new Chart(document.getElementById('allocationChart'), {
+  type: 'doughnut',
+  data: {
+    labels: ['VOO', 'HIMS', 'HOOD', 'IBRX', 'CASH'],
+    datasets: [{
+      data: [57.2, 19.4, 15.3, 6.2, 1.9],
+      backgroundColor: ['#60a5fa', '#d4ff3f', '#fbbf24', '#f87171', '#5a6068'],
+      borderColor: '#14171b',
+      borderWidth: 3,
+      cutout: '72%'
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: '#14171b',
+        borderColor: '#2a2f37',
+        borderWidth: 1,
+        padding: 8,
+        titleFont: { family: 'JetBrains Mono', size: 11, weight: '600' },
+        bodyFont: { family: 'JetBrains Mono', size: 12 },
+        callbacks: { label: (ctx) => ctx.parsed + '%' }
+      }
+    }
+  }
+});
+
+// ─── Sparklines ───────────────────────────────────────────────
+document.querySelectorAll('canvas[data-spark]').forEach(canvas => {
+  const dir = canvas.dataset.spark;
+  const points = [];
+  let val = 50;
+  for (let i = 0; i < 20; i++) {
+    val += (Math.random() - (dir === 'up' ? 0.4 : 0.6)) * 6;
+    points.push(val);
+  }
+  const color = dir === 'up' ? '#4ade80' : '#f87171';
+  new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels: points.map((_, i) => i),
+      datasets: [{ data: points, borderColor: color, borderWidth: 1.5, fill: false, tension: 0.4, pointRadius: 0 }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { enabled: false } },
+      scales: { x: { display: false }, y: { display: false } },
+      animation: { duration: 800 }
+    }
+  });
+});
+
+// ─── Tab interactivity ────────────────────────────────────────
+document.querySelectorAll('.card-actions').forEach(group => {
+  group.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      group.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+});
+
+document.querySelectorAll('.sidebar .nav-item').forEach(item => {
+  item.addEventListener('click', () => {
+    document.querySelectorAll('.sidebar .nav-item').forEach(i => i.classList.remove('active'));
+    item.classList.add('active');
+  });
+});
+</script>
+
+</body>
+</html>
